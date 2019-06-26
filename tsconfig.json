@@ -2,13 +2,19 @@
   "compilerOptions": {
     "module": "commonjs",
     "declaration": true,
-    "removeComments": true,
+	"removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "target": "es6",
     "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": "./",
+	"baseUrl": "./",
+	"paths": {
+		"@models/*": [
+			"src/models/*"
+		]
+	},
+	"moduleResolution": "node",
     "incremental": true
   },
   "exclude": ["node_modules"]
