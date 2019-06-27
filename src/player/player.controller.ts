@@ -1,6 +1,7 @@
 export class Player {
-	public uuid: number;
+	public uuid: string;
 	public nickname: string;
 	public isReady: boolean;
 	public client: any;
+
 }
