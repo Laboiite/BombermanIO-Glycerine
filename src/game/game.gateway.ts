@@ -1,8 +1,9 @@
 import { SubscribeMessage, WebSocketGateway, WebSocketServer, OnGatewayConnection } from "@nestjs/websockets";
 import { GameService } from "./game.service";
 import { Client, Server } from "socket.io";
-import { Player } from "../models/player.model";
+import { Player } from "../player/player.controller";
 import { Game } from "./game.controller";
+import { WSMessage } from "src/shared/wsmessage.intf";
 
 @WebSocketGateway()
 export class GameGateway implements OnGatewayConnection {
@@ -42,7 +43,7 @@ export class GameGateway implements OnGatewayConnection {
 		const creator: Player = data.client;
 		creator.client = client;
 		this.gameService.createGame(data.content, creator);
-		return this.gameService.getGameList();
+		return { event: "message", data: { client: null, content: "Game created"}};
 	}
 
 	@SubscribeMessage("joinGame")
@@ -52,13 +53,21 @@ export class GameGateway implements OnGatewayConnection {
 		let mygame = this.gameService.getGame(data.content);
 		mygame.addPlayer(newPlayer);
 
-		this.broadcast(mygame, { topic: "test", content: "content de test" });
+
+		this.broadcast(mygame, { event: "newPlayer", data: { client: newPlayer, content: mygame.players}});
 
 		return this.gameService.getGameList();
 
 	}
 
-	public broadcast(game: Game, message: any) {
+	@SubscribeMessage("movePlayer")
+	public movePlayer(client: any, data: any) {
+		let magame = this.gameService.getPlayerGame(data.client.id);
+		this.broadcast(magame, { event: "movePlayer", data: data.content });
+
+	}
+
+	public broadcast(game: Game, message: WSMessage) {
 		const data = JSON.stringify(message);
 		game.players.forEach(player => player.client.send(data));
 	}

@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { Game } from "./game.controller";
-import { Player } from "../models/player.model";
+import { Player } from "../player/player.controller";
 export enum GAME_STATUS {
 	WAITING = "WAITING",
 	ONGOING = "ONGOING",
@@ -21,8 +21,17 @@ export class GameService {
 		return this.games.find(game => game.name === name);
 	}
 
+	public getPlayerGame(uuid: string): Game {
+		for (const game of this.games) {
+			if (game.findPlayer(uuid)) {
+				return game;
+			}
+		}
+	}
+
 	public getGameList() {
 		return this.games;
 	}
+
 
 }

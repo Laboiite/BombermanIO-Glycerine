@@ -1,5 +1,5 @@
 import { GAME_STATUS } from "./game.service";
-import { Player } from "../models/player.model";
+import { Player } from "../player/player.controller";
 
 export class Game {
 	public name: string;
@@ -20,6 +20,10 @@ export class Game {
 
 	public getGameStatus(): string {
 		return this.status;
+	}
+
+	public findPlayer(uuid: string): Player {
+		return this.players.find(player => player.uuid === uuid);
 	}
 
 	public addPlayer(player: Player) {
