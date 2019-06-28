@@ -53,6 +53,7 @@ export class GameGateway implements OnGatewayConnection {
 
 	@SubscribeMessage("joinGame")
 	public registerNewPlayer(client: any, msg: WSMessageContent) {
+
 		const newPlayer: Player = msg.sender;
 		newPlayer.client = client;
 		const mygame = this.gameService.getGame(msg.content);
@@ -68,12 +69,20 @@ export class GameGateway implements OnGatewayConnection {
 	}
 
 	@SubscribeMessage("movePlayer")
-	public movePlayer(client: any, data: any) {
-		console.log("movePlayer", data);
-		let magame = this.gameService.getPlayerGame(data.client.id);
+	public movePlayer(client: any, msg: WSMessageContent) {
 
-		this.broadcast(magame, null, BROADCAST.MOVEPLAYER, data.content );
+		console.log("--- movePlayer", msg.sender.id, msg.content);
 
+		try {
+			const magame = this.gameService.getPlayerGame(msg.sender.id);
+			console.log("--- mygame", magame, magame.players);
+			this.broadcast(magame, msg.sender.id, BROADCAST.MOVEPLAYER, msg.content );
+		}
+		catch(e) {
+			console.log("ERROR", e);
+		}
+
+		return "OK";
 	}
 
 	public broadcast(game: Game, sender: string, message: BROADCAST, data: any) {
@@ -84,6 +93,9 @@ export class GameGateway implements OnGatewayConnection {
 				sender: sender
 			}
 		};
-		game.players.forEach(player => player.client.send(JSON.stringify(wsmsg)));
+		game.players.forEach(player => {
+			console.log(">>> BORADCAST ", message," TO ", player.nickName);
+			player.client.send(JSON.stringify(wsmsg));
+		});
 	}
 }

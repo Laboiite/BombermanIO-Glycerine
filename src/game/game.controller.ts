@@ -23,7 +23,7 @@ export class Game {
 	}
 
 	public findPlayer(uuid: string): Player {
-		return this.players.find(player => player.uuid === uuid);
+		return this.players.find(player => player.id === uuid);
 	}
 
 	public addPlayer(player: Player) {
