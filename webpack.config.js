@@ -1,6 +1,8 @@
 const webpack = require('webpack');
 const path = require('path');
 const nodeExternals = require('webpack-node-externals');
+const { CleanWebpackPlugin }= require('clean-webpack-plugin');
+const FriendlyErrorsWebpackPlugin= require('friendly-errors-webpack-plugin');
 
 module.exports = {
     entry: ['webpack/hot/poll?100', './src/main.ts'],
@@ -24,7 +26,13 @@ module.exports = {
     resolve: {
         extensions: ['.tsx', '.ts', '.js'],
     },
-    plugins: [new webpack.HotModuleReplacementPlugin()],
+    plugins: [
+		// cleanup dist/
+		new CleanWebpackPlugin(),
+		// Ask Webpack to display meaningful error messages
+		new FriendlyErrorsWebpackPlugin(),
+		new webpack.HotModuleReplacementPlugin(),
+	],
     output: {
         path: path.join(__dirname, 'dist'),
         filename: 'server.js',

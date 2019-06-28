@@ -3,7 +3,8 @@ import { GameService } from "./game.service";
 import { Client, Server } from "socket.io";
 import { Player } from "../player/player.controller";
 import { Game } from "./game.controller";
-import { WSMessage } from "src/shared/wsmessage.intf";
+import { WSMessage, WSMessageContent } from "../shared/wsmessage.intf";
+import { BROADCAST } from "../shared/broadcast.enum";
 
 @WebSocketGateway()
 export class GameGateway implements OnGatewayConnection {
@@ -39,22 +40,28 @@ export class GameGateway implements OnGatewayConnection {
 	}
 
 	@SubscribeMessage("createGame")
-	public createGame(client: any, data: any): any {
-		const creator: Player = data.client;
+	public createGame(client: any, msg: WSMessageContent): any {
+
+		const creator: Player = msg.sender;
 		creator.client = client;
-		this.gameService.createGame(data.content, creator);
-		return { event: "message", data: { client: null, content: "Game created"}};
+		this.gameService.createGame(msg.content, creator);
+
+		console.log("--- createGame", msg.content, creator.nickName, creator.id);
+
+		// return { event: "message", data: { client: null, content: "Game created"}};
 	}
 
 	@SubscribeMessage("joinGame")
-	public registerNewPlayer(client: any, data: any) {
-		const newPlayer: Player = data.client;
+	public registerNewPlayer(client: any, msg: WSMessageContent) {
+		const newPlayer: Player = msg.sender;
 		newPlayer.client = client;
-		let mygame = this.gameService.getGame(data.content);
+		const mygame = this.gameService.getGame(msg.content);
 		mygame.addPlayer(newPlayer);
 
+		console.log("--- joinGame", msg.content, newPlayer.nickName, newPlayer.id);
 
-		this.broadcast(mygame, { event: "newPlayer", data: { client: newPlayer, content: mygame.players}});
+		// this.broadcast(mygame, { event: BROADCAST.NEWPLAYER, data: { client: newPlayer, content: mygame.players}});
+		this.broadcast(mygame, newPlayer.id, BROADCAST.NEWPLAYER, mygame.players);
 
 		return this.gameService.getGameList();
 
@@ -62,13 +69,21 @@ export class GameGateway implements OnGatewayConnection {
 
 	@SubscribeMessage("movePlayer")
 	public movePlayer(client: any, data: any) {
+		console.log("movePlayer", data);
 		let magame = this.gameService.getPlayerGame(data.client.id);
-		this.broadcast(magame, { event: "movePlayer", data: data.content });
+
+		this.broadcast(magame, null, BROADCAST.MOVEPLAYER, data.content );
 
 	}
 
-	public broadcast(game: Game, message: WSMessage) {
-		const data = JSON.stringify(message);
-		game.players.forEach(player => player.client.send(data));
+	public broadcast(game: Game, sender: string, message: BROADCAST, data: any) {
+		const wsmsg: WSMessage= {
+			event: message,
+			data: {
+				content: data,
+				sender: sender
+			}
+		};
+		game.players.forEach(player => player.client.send(JSON.stringify(wsmsg)));
 	}
 }

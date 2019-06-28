@@ -1,7 +1,9 @@
+export interface WSMessageContent {
+	sender: any;
+	content: any;
+}
+
 export interface WSMessage {
 	event: string;
-	data: {
-		client: any,
-		content: any,
-	};
+	data: WSMessageContent;
 }
