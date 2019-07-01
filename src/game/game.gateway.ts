@@ -7,36 +7,36 @@ import { WSMessage, WSMessageContent } from "../shared/wsmessage.intf";
 import { BROADCAST } from "../shared/broadcast.enum";
 
 @WebSocketGateway()
-export class GameGateway implements OnGatewayConnection {
-
+export class GameGateway  {
+	// implements OnGatewayConnection
 	@WebSocketServer()
 	public server: Server;
 	public wsClients = [];
 	constructor(public gameService: GameService) { }
 
-	public handleConnection(client: any) {
-		console.log("new client declared in wsClients");
-		let alreadyThere = false;
-		if (this.wsClients.length) {
-			for (let c of this.wsClients) {
-				if (c === client) {
-					alreadyThere = true;
-				}
-			}
-			if (!alreadyThere) {
-				this.wsClients.push(client);
-			}
+	// public handleConnection(client: any) {
+	// 	console.log("new client declared in wsClients");
+	// 	let alreadyThere = false;
+	// 	if (this.wsClients.length) {
+	// 		for (let c of this.wsClients) {
+	// 			if (c === client) {
+	// 				alreadyThere = true;
+	// 			}
+	// 		}
+	// 		if (!alreadyThere) {
+	// 			this.wsClients.push(client);
+	// 		}
 
-		} else {
-			console.log("init of wsClient");
-			this.wsClients.push(client);
-		}
-	}
+	// 	} else {
+	// 		console.log("init of wsClient");
+	// 		this.wsClients.push(client);
+	// 	}
+	// }
 
-	@SubscribeMessage("games")
-	public displayGames(client: Client, data: any): any {
+	@SubscribeMessage("getGames")
+	public getGames(client: Client, msg: WSMessageContent): any {
 		console.log("our games :", this.gameService.getGameList());
-		return this.gameService.getGameList();
+		return JSON.stringify(new WSMessage(BROADCAST.MESSAGE, msg.sender, this.gameService.getGameList()) );
 	}
 
 	@SubscribeMessage("createGame")
@@ -98,4 +98,6 @@ export class GameGateway implements OnGatewayConnection {
 			player.client.send(JSON.stringify(wsmsg));
 		});
 	}
+
+
 }
