@@ -1,13 +1,13 @@
 import { BROADCAST } from "./broadcast.enum";
 
-export interface WSMessageContent {
+export interface IWSMessageContent {
 	sender: any;
 	content: any;
 }
 
 export class WSMessage {
-	event: string;
-	data: WSMessageContent;
+	public event: string;
+	public data: IWSMessageContent;
 
 	constructor(eventMessage: BROADCAST, sender: any, content: any) {
 		this.event= eventMessage,

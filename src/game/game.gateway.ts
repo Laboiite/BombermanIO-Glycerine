@@ -1,10 +1,11 @@
-import { SubscribeMessage, WebSocketGateway, WebSocketServer, OnGatewayConnection } from "@nestjs/websockets";
+import { SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { GameService } from "./game.service";
 import { Client, Server } from "socket.io";
 import { Player } from "../player/player.controller";
 import { Game } from "./game.controller";
-import { WSMessage, WSMessageContent } from "../shared/wsmessage.intf";
+import { WSMessage, IWSMessageContent } from "../shared/wsmessage.intf";
 import { BROADCAST } from "../shared/broadcast.enum";
+import { IWSMessageGame } from "src/shared/wsmessagegame.intf";
 
 @WebSocketGateway()
 export class GameGateway  {
@@ -34,32 +35,32 @@ export class GameGateway  {
 	// }
 
 	@SubscribeMessage("getGames")
-	public getGames(client: Client, msg: WSMessageContent): any {
+	public getGames(client: Client, msg: IWSMessageContent): any {
 		console.log("our games :", this.gameService.getGameList());
 		return JSON.stringify(new WSMessage(BROADCAST.MESSAGE, msg.sender, this.gameService.getGameList()) );
 	}
 
 	@SubscribeMessage("createGame")
-	public createGame(client: any, msg: WSMessageContent): any {
+	public createGame(client: any, msg: IWSMessageGame): any {
 
 		const creator: Player = msg.sender;
 		creator.client = client;
-		this.gameService.createGame(msg.content, creator);
+		this.gameService.createGame(msg.content.name, creator);
 
-		console.log("--- createGame", msg.content, creator.nickName, creator.id);
+		console.log("--- createGame", msg.content.name, creator, creator.id);
 
 		// return { event: "message", data: { client: null, content: "Game created"}};
 	}
 
 	@SubscribeMessage("joinGame")
-	public registerNewPlayer(client: any, msg: WSMessageContent) {
+	public registerNewPlayer(client: any, msg: IWSMessageGame) {
 
 		const newPlayer: Player = msg.sender;
 		newPlayer.client = client;
-		const mygame = this.gameService.getGame(msg.content);
+		const mygame = this.gameService.getGame(msg.content.name);
 		mygame.addPlayer(newPlayer);
 
-		console.log("--- joinGame", msg.content, newPlayer.nickName, newPlayer.id);
+		console.log("--- joinGame", msg.content.name, newPlayer.nickName, newPlayer.id);
 
 		// this.broadcast(mygame, { event: BROADCAST.NEWPLAYER, data: { client: newPlayer, content: mygame.players}});
 		this.broadcast(mygame, newPlayer.id, BROADCAST.NEWPLAYER, mygame.players);
@@ -69,20 +70,18 @@ export class GameGateway  {
 	}
 
 	@SubscribeMessage("movePlayer")
-	public movePlayer(client: any, msg: WSMessageContent) {
+	public movePlayer(client: any, msg: IWSMessageContent) {
 
 		console.log("--- movePlayer", msg.sender.id, msg.content);
 
 		try {
 			const magame = this.gameService.getPlayerGame(msg.sender.id);
-			console.log("--- mygame", magame, magame.players);
+			console.log("--- mygame", magame, magame.players.map(player=> player.nickName));
 			this.broadcast(magame, msg.sender.id, BROADCAST.MOVEPLAYER, msg.content );
 		}
 		catch(e) {
 			console.log("ERROR", e);
 		}
-
-		return "OK";
 	}
 
 	public broadcast(game: Game, sender: string, message: BROADCAST, data: any) {
