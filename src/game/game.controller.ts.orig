@@ -22,8 +22,13 @@ export class Game {
 		return this.status;
 	}
 
+<<<<<<< HEAD
+	public findPlayer(uuid: string): Player {
+		return this.players.find(player => player.id === uuid);
+=======
 	public findPlayer(id: string): Player {
 		return this.players.find(player => player.id === id);
+>>>>>>> Intermediary commit, data being transfered from one computer to another
 	}
 
 	public addPlayer(player: Player) {
